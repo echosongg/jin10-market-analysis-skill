@@ -1,3 +1,7 @@
+<img width="2310" height="2808" alt="regime_mode" src="https://github.com/user-attachments/assets/fd56d9be-f4d0-4a15-a572-ec38cf89d6b5" />
+<img width="2310" height="2808" alt="regime_mode" src="https://github.com/user-attachments/assets/811c1573-05a8-4941-beb5-6ab43e147947" />
+<img width="2310" height="2808" alt="score_jjudge" src="https://github.com/user-attachments/assets/5eb73021-2520-4ecd-bdcc-df0548a394b9" />
+<img width="2934" height="8192" alt="jin10dataAnalyse" src="https://github.com/user-attachments/assets/a86a9320-b49e-4d15-9d0e-d995815e76cf" />
 # jin10-mcp-market-analysis
 
 > 基于金十数据 MCP 服务的财经市场分析工具
