@@ -1,7 +1,3 @@
-<img width="2310" height="2808" alt="regime_mode" src="https://github.com/user-attachments/assets/fd56d9be-f4d0-4a15-a572-ec38cf89d6b5" />
-<img width="2310" height="2808" alt="regime_mode" src="https://github.com/user-attachments/assets/811c1573-05a8-4941-beb5-6ab43e147947" />
-<img width="2310" height="2808" alt="score_jjudge" src="https://github.com/user-attachments/assets/5eb73021-2520-4ecd-bdcc-df0548a394b9" />
-<img width="2934" height="8192" alt="jin10dataAnalyse" src="https://github.com/user-attachments/assets/a86a9320-b49e-4d15-9d0e-d995815e76cf" />
 # jin10-mcp-market-analysis
 
 > 基于金十数据 MCP 服务的财经市场分析工具
@@ -35,7 +31,7 @@
 ## 项目简介
 
 本项目是一个基于 [金十数据](https://jin10.com) MCP（Model Context Protocol）服务的财经市场分析工具包。它通过标准化的 MCP 协议接口，获取实时金融数据（行情、K 线、快讯、资讯、财经日历），并提供可编程的分析引擎，支持对黄金、原油、美股、港股、A 股、日股、韩股、外汇等 10 个市场方向进行多维度评分。
-
+<img width="2310" height="2808" alt="regime_mode" src="https://github.com/user-attachments/assets/fd56d9be-f4d0-4a15-a572-ec38cf89d6b5" />
 **核心价值：** 将零散的财经数据整合为结构化的市场方向分析，帮助投资者快速了解今日市场主线。
 
 ---
@@ -212,7 +208,7 @@ USDJPY    美元/日元         USDCNH    美元/人民币
 ### 评分模型
 
 对 10 个市场方向分别从 5 个维度加权评分，**总分 100 分**：
-
+<img width="2310" height="2808" alt="score_jjudge" src="https://github.com/user-attachments/assets/5eb73021-2520-4ecd-bdcc-df0548a394b9" />
 | 维度 | 权重 | 说明 |
 |------|------|------|
 | **宏观环境** | 25% | 当前货币周期、通胀预期、利率方向对该方向的影响 |
@@ -255,7 +251,7 @@ USDJPY    美元/日元         USDCNH    美元/人民币
 | **Risk-Off** 🛡️ | 避险情绪、地缘冲突 | 黄金、美债、美元 | 韩股、港股、原油 |
 | **Inflation Trade** 🔥 | 通胀升温、商品涨 | 黄金、原油、商品 | 美债、成长股 |
 | **Rate-Cut Trade** 💵 | 降息预期明确 | 黄金、科技股、债券 | 美元、银行股 |
-
+<img width="2310" height="2808" alt="regime_mode" src="https://github.com/user-attachments/assets/811c1573-05a8-4941-beb5-6ab43e147947" />
 ### 各方向关键词规则
 
 评分引擎通过搜索快讯流中的利好/利空关键词，自动调整新闻催化分。
