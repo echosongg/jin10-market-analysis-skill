@@ -1,0 +1,230 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>金十市场看板 | 2026-06-02</title>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;background:#0d1117;color:#e6edf3;padding:20px}
+.header{display:flex;justify-content:space-between;align-items:center;margin-bottom:24px;padding-bottom:16px;border-bottom:1px solid #30363d}
+.header h1{font-size:24px;font-weight:600;color:#f0f6fc}
+.header .time{color:#8b949e;font-size:14px}
+.regime-badge{display:inline-block;padding:4px 14px;border-radius:20px;font-size:13px;font-weight:600}
+.regime-mixed{background:#1e3a5f;color:#58a6ff}
+.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:12px;margin-bottom:24px}
+.card{background:#161b22;border:1px solid #30363d;border-radius:12px;padding:16px}
+.card:hover{box-shadow:0 0 0 1px #58a6ff33;background:#1c2128}
+.card .label{font-size:12px;color:#8b949e;margin-bottom:4px}
+.card .value{font-size:18px;font-weight:600;color:#f0f6fc}
+.card .pct{font-size:13px;margin-left:6px}
+.card .pct.up{color:#3fb950}
+.card .pct.down{color:#f85149}
+.card .code{font-size:11px;color:#484f58;margin-top:4px}
+
+.section-title{font-size:16px;font-weight:600;color:#f0f6fc;margin:20px 0 12px;padding-bottom:8px;border-bottom:1px solid #21262d}
+
+.score-table{width:100%;border-collapse:collapse;margin-bottom:24px}
+.score-table th{text-align:left;padding:8px 12px;font-size:12px;color:#8b949e;border-bottom:2px solid #30363d}
+.score-table td{padding:8px 12px;border-bottom:1px solid #21262d;font-size:14px}
+.score-table tr:hover{background:#1c2128}
+.level-strong{color:#3fb950;font-weight:600}
+.level-watch{color:#58a6ff;font-weight:600}
+.level-neutral{color:#d29922}
+.level-caution{color:#f85149}
+.score-bar{height:6px;border-radius:3px;background:#21262d;overflow:hidden;width:80px;display:inline-block;vertical-align:middle;margin-right:8px}
+.score-bar-inner{height:100%;border-radius:3px;transition:width .5s ease}
+
+.calendar-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:12px;margin-bottom:24px}
+.cal-card{background:#161b22;border:1px solid #30363d;border-radius:10px;padding:14px}
+.cal-card .star{color:#d29922;font-size:14px}
+.cal-card .title{font-size:14px;color:#f0f6fc;margin:6px 0}
+.cal-card .time{font-size:12px;color:#8b949e}
+.cal-card .data{display:flex;gap:16px;margin-top:8px;font-size:12px}
+.cal-card .data-item{color:#8b949e}
+.cal-card .data-item .val{color:#f0f6fc;font-weight:600}
+
+.flash-list{margin-bottom:24px}
+.flash-item{background:#161b22;border:1px solid #30363d;border-radius:8px;padding:10px 14px;margin-bottom:8px;font-size:13px;color:#c9d1d9;line-height:1.5}
+
+.chart-container{max-width:800px;margin-bottom:24px}
+</style>
+</head>
+<body>
+
+<div class="header">
+  <div>
+    <h1>📊 金十市场看板</h1>
+    <div class="time" id="updateTime">加载中...</div>
+  </div>
+  <div>
+    <span class="regime-badge regime-mixed" id="regimeBadge">加载中...</span>
+  </div>
+</div>
+
+<div class="grid" id="quoteGrid"></div>
+
+<h2 class="section-title">📈 方向评分</h2>
+<table class="score-table" id="scoreTable">
+  <thead>
+    <tr><th>方向</th><th>总分</th><th>宏观</th><th>新闻</th><th>趋势</th><th>资金</th><th>事件</th><th>等级</th></tr>
+  </thead>
+  <tbody id="scoreBody"></tbody>
+</table>
+
+<h2 class="section-title">📡 今日关键事件</h2>
+<div class="calendar-grid" id="calendarGrid"></div>
+
+<h2 class="section-title">📰 近期快讯</h2>
+<div class="flash-list" id="flashList"></div>
+
+<h2 class="section-title">💡 行情雷达</h2>
+<div class="chart-container"><canvas id="radarChart"></canvas></div>
+
+<script>
+// === DATA (preloaded) ===
+const DATA = {
+  scores: [
+    {name:"黄金/贵金属",code:"XAUUSD",total:69,level:"可关注",macro:80,news:74,trend:54,fund:70,event:75},
+    {name:"港股互联网",code:"HSI",total:66,level:"可关注",macro:70,news:70,trend:60,fund:65,event:65},
+    {name:"韩股",code:"KOSPI",total:63,level:"中性观察",macro:70,news:55,trend:65,fund:60,event:65},
+    {name:"美股科技",code:"NDX",total:62,level:"中性观察",macro:70,news:60,trend:65,fund:65,event:70},
+    {name:"日股",code:"JP225",total:60,level:"中性观察",macro:65,news:55,trend:60,fund:60,event:60},
+    {name:"A股成长",code:"CN",total:57,level:"中性观察",macro:60,news:55,trend:55,fund:55,event:60},
+    {name:"原油/能源",code:"USOIL",total:54,level:"中性观察",macro:65,news:53,trend:37,fund:55,event:50},
+    {name:"债券/避险",code:"BND",total:52,level:"中性观察",macro:55,news:50,trend:50,fund:50,event:55},
+    {name:"美元/外汇",code:"DXY",total:48,level:"谨慎",macro:45,news:50,trend:45,fund:50,event:55},
+    {name:"A股红利/防御",code:"CN-D",total:48,level:"谨慎",macro:45,news:45,trend:50,fund:50,event:55}
+  ],
+  quotes: {
+    XAUUSD:{close:"4475.91",pct:"-0.18%",name:"现货黄金"},
+    XAGUSD:{close:"75.006",pct:"+0.242%",name:"现货白银"},
+    USOIL:{close:"93.688",pct:"-0.810%",name:"WTI原油"},
+    EURUSD:{close:"1.16310",pct:"+0.012%",name:"欧元/美元"},
+    USDJPY:{close:"159.703",pct:"+0.036%",name:"美元/日元"},
+    USDCNH:{close:"6.76043",pct:"-0.064%",name:"美元/人民币"}
+  },
+  regime:"混合/震荡",
+  regime_desc:"无明确一致方向，结构性机会为主",
+  time:"2026-06-02 10:49:14",
+  flash: [
+    "【行情】现货黄金短线走低逾2美元，现报4475.91美元/盎司",
+    "【美联储】美联储官员讲话：通胀仍高于目标，不急于降息",
+    "【能源】欧佩克+讨论延长减产协议至年底",
+    "【南向资金】港股通净买入腾讯控股15亿港元",
+    "【数据】美国4月核心PCE同比2.8%，符合预期",
+    "【地缘】中东局势缓和，油价小幅回落",
+    "【科技】英伟达市值重返3万亿美元，AI需求持续强劲",
+    "【港股】恒生指数日内涨0.5%，科技股领涨",
+    "【黄金】全球央行一季度购金289吨，继续增持",
+    "【外汇】美元指数走弱至104.2，非美货币反弹"
+  ],
+  calendar: [
+    {star:3,title:"中国5月制造业PMI",time:"06-01 09:45"},
+    {star:3,title:"英国5月Nationwide房价指数月率",time:"06-01 14:00"},
+    {star:3,title:"瑞士4月实际零售销售年率",time:"06-01 14:30"},
+    {star:2,title:"澳大利亚5月标普全球制造业PMI终值",time:"06-01 07:00"},
+    {star:2,title:"韩国5月贸易帐初值(亿美元)",time:"06-01 08:00"}
+  ]
+};
+
+// Render
+const {scores,quotes,regime,regime_desc,time,flash,calendar} = DATA;
+
+document.getElementById('updateTime').textContent = `更新于 ${time}`;
+document.getElementById('regimeBadge').textContent = regime + ' | ' + regime_desc;
+
+// Quotes
+const qGrid = document.getElementById('quoteGrid');
+Object.entries(quotes).forEach(([code,q]) => {
+  const close = parseFloat(q.close);
+  const pctStr = q.pct;
+  const isUp = !pctStr.startsWith('-');
+  qGrid.innerHTML += `<div class="card">
+    <div class="label">${q.name}</div>
+    <div><span class="value">${q.close}</span><span class="pct ${isUp?'up':'down'}">${pctStr}</span></div>
+    <div class="code">${code}</div>
+  </div>`;
+});
+
+// Scores
+const sb = document.getElementById('scoreBody');
+scores.forEach(s => {
+  const lvlClass = s.level==='强关注'?'level-strong':s.level==='可关注'?'level-watch':s.level==='中性观察'?'level-neutral':'level-caution';
+  const barColor = s.total>=80?'#3fb950':s.total>=65?'#58a6ff':s.total>=50?'#d29922':'#f85149';
+  sb.innerHTML += `<tr>
+    <td>${s.name}</td>
+    <td>
+      <span class="score-bar"><span class="score-bar-inner" style="width:${s.total}%;background:${barColor}"></span></span>
+      ${s.total}
+    </td>
+    <td>${s.macro}</td>
+    <td>${s.news}</td>
+    <td>${s.trend}</td>
+    <td>${s.fund}</td>
+    <td>${s.event}</td>
+    <td class="${lvlClass}">${s.level}</td>
+  </tr>`;
+});
+
+// Calendar
+const cg = document.getElementById('calendarGrid');
+calendar.forEach(e => {
+  const stars = '⭐'.repeat(e.star);
+  cg.innerHTML += `<div class="cal-card">
+    <div class="star">${stars}</div>
+    <div class="title">${e.title}</div>
+    <div class="time">${e.time}</div>
+  </div>`;
+});
+
+// Flash
+const fl = document.getElementById('flashList');
+flash.forEach(t => {
+  fl.innerHTML += `<div class="flash-item">${t}</div>`;
+});
+
+// Radar Chart
+const ctx = document.createElement('canvas');
+ctx.id = 'radarCanvas';
+document.querySelector('.chart-container').innerHTML = '';
+document.querySelector('.chart-container').appendChild(ctx);
+
+const radarLabels = scores.map(s=>s.name);
+const totalScores = scores.map(s=>s.total);
+
+new Chart(ctx, {
+  type: 'radar',
+  data: {
+    labels: radarLabels,
+    datasets: [{
+      label: '综合评分',
+      data: totalScores,
+      backgroundColor: 'rgba(88,166,255,0.15)',
+      borderColor: '#58a6ff',
+      borderWidth: 2,
+      pointBackgroundColor: '#58a6ff',
+      pointBorderColor: '#fff',
+      pointRadius: 4
+    }]
+  },
+  options: {
+    responsive: true,
+    scales: {
+      r: {
+        min: 0, max: 100,
+        ticks: {stepSize: 20, backdropColor:'transparent', color:'#8b949e'},
+        grid: {color:'#30363d'},
+        angleLines: {color:'#30363d'},
+        pointLabels: {color:'#e6edf3', font:{size:12}}
+      }
+    },
+    plugins: {
+      legend: {display: false}
+    }
+  }
+});
+</script>
+</body>
+</html>
