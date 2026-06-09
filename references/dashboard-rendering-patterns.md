@@ -28,6 +28,33 @@
 
 **正确做法：** 在生成看板前调用 `list_calendar`，将返回的 events 数组序列化到 HTML 的 `D.calendar` 字段中。
 
+### 陷阱 4: Python f-string 与 JS 花括号冲突
+
+**现象：** `execute_code` 中生成 HTML 时 `{left: 40}` 被 Python 解释为 set/字典字面量导致 `NameError`。
+
+**根因：** Python f-string 中 `{...}` 是插值表达式，JS 的对象字面量 `{left: 40}` 和函数体 `{ return x; }` 与 f-string 语法冲突。
+
+**修复方案：**
+
+方案 A — 用多段拼接（推荐）：
+```python
+html_parts = []
+html_parts.append("""<script>""")
+html_parts.append(f"""const score = {total};""")      # 变量注入
+html_parts.append("""function f(d) { return d.x; }""")  # 纯 JS 代码
+html_parts.append("</script>")
+full = "".join(html_parts)
+```
+
+方案 B — 双花括号转义（适合少量场景）：
+```python
+html = f"""<script>const pad = {{left: 40, right: 10}};</script>"""
+```
+
+**推荐使用方案 A**，避免阅读和调试困难。
+
+### 陷阱 5: 模态框需要延迟初始化
+
 ### 陷阱 3: `list_calendar` 返回结构特殊
 
 `list_calendar` 的 `data` 是数组（不是 `data.items`），且 star 范围是 1-5（不是 1-3），非农等重大事件 star=5。
@@ -83,6 +110,39 @@ function renderCalendar(events) {
 
 **看板文件命名规则：** 固定文件名 `jin10_dashboard.html`，每次更新直接覆盖，不生成时间戳版本。
 **路径：** 同步到 `桌面/jin10_dashboard.html`（Windows 用户可见路径）。
+
+## Watchlist 关注方向紧凑看板模式
+
+当需要基于 watchlist 关注方向生成看板（非完整10方向评分模式）时，使用此模式。
+
+**适用场景：** 用户要求"更新看板"且当前数据是基于 watchlist 关注方向采集的。
+
+**结构（5大板块，约25-35KB）：**
+
+1. **顶部标题 + 市场概览** — 当前行情日期、Regime 判断、总体评分（基于关注方向加权平均）
+2. **方向雷达图** — 最高分关注方向的五维评分图（纯 HTML/CSS 多边形绘制，无外部库）
+   - 五维：宏观环境、新闻催化、行情趋势、资金偏好、事件风险
+   - 使用 clip-path: polygon() 实现雷达形状
+3. **关注方向评分排名条** — 每个方向一条彩色分数条（0-100分）+ 文字标签
+   - 颜色规则：>=60 绿、50-59 黄、<50 红
+   - 右侧显示分数数字
+4. **今日关注方向速评** — 每个方向的文字评价（1-2句判断）
+5. **日历事件时间线** — 待发布和已发布事件
+
+**生成方式：** 在 `execute_code` 中用 Python 直接拼接 HTML 字符串。分为数据部分（Python 变量注入 JSON）和模板部分（纯 JS/HTML/CSS，用单引号/三重引号避免 f-string 花括号冲突）。
+
+### K线图嵌入（有代理品种代码时可选）
+
+如果 watchlist 中的方向有代理品种代码且成功获取了 K 线数据，可在看板底部嵌入 Chart.js K线图：
+- 使用 Chart.js 的 `candlestick` 元素类型（需注册）
+- X轴时间戳、Y轴价格、成交量附在底部
+
+### 已验证的渲染经验
+
+- 方向评分排名条用 `clip-path` + `linear-gradient` 实现，避免用 `width` 百分比（JS 直接计算像素宽度更可靠）
+- 雷达图用 `<svg>` 比 `<canvas>` 更容易控制交互（坐标计算简单）
+- 关注方向速评段落的文本在 Python 端生成好再注入，不在 JS 端做自然语言处理
+- 看板文件固定 25-35KB，比完整 10 方向评分看板（~200KB+）更轻量
 
 ## 单品种快速看板模式
 
