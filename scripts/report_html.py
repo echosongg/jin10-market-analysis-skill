@@ -132,6 +132,7 @@ def _build_payload(data: dict) -> dict:
     return {
         "regime":           regime,
         "regime_label":     REGIME_LABELS.get(regime, regime),
+        "regime_reasons":   data.get("regime_reasons", []),
         "all_regimes":      ALL_REGIMES,
         "top_direction":    top.get("name", "—"),
         "top_score":        top.get("total", 0),
@@ -263,7 +264,8 @@ canvas{width:100%!important;max-height:430px;}
         <div class="traffic" id="trafficLights"></div>
         <div>
           <div class="asset-grid" id="assetGrid"></div>
-          <p class="mini" id="regimeDesc"></p>
+          <p class="mini" id="regimeDesc" style="margin-top:10px"></p>
+          <div id="regimeReasons" style="margin-top:8px;display:grid;gap:4px"></div>
         </div>
       </div>
     </div>
@@ -385,6 +387,17 @@ document.getElementById('trafficLights').innerHTML = D.all_regimes.map(r=>`
     <span>${REGIME_LABEL[r]||r}</span>
   </div>`).join('');
 document.getElementById('regimeDesc').textContent = REGIME_DESC[D.regime]||'';
+// 判断依据
+const reasonsEl = document.getElementById('regimeReasons');
+if(D.regime_reasons && D.regime_reasons.length){
+  reasonsEl.innerHTML = D.regime_reasons.map(r=>{
+    const isConclusion = r.startsWith('→');
+    return `<div style="font-size:12px;padding:3px 8px;border-radius:8px;
+      background:${isConclusion?'rgba(34,211,238,.12)':'rgba(255,255,255,.04)'};
+      color:${isConclusion?'#22D3EE':'#8B949E'};
+      border:1px solid ${isConclusion?'rgba(34,211,238,.3)':'rgba(139,148,158,.15)'}">${r}</div>`;
+  }).join('');
+}
 
 // ── 6. 资产行情网格 ──────────────────────────────────────────
 document.getElementById('assetGrid').innerHTML = D.quotes.map(q=>{
